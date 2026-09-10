@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Image to PDF Converter</title>
+  
+  <!-- Stable jsPDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <style>
+    :root {
+      --primary-blue: #1565c0;
+      --header-blue: #1155ab;
+      --light-bg: #e8f4fe;
+      --border-blue: #90caf9;
+      --text-color: #0d47a1;
+      --dark-text: #1a237e;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .calculator-card {
+      width: 100%;
+      max-width: 650px;
+      background: #ffffff;
+      border: 2px solid var(--primary-blue);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(21, 101, 192, 0.12);
+      overflow: hidden;
+    }
+
+    .header-box {
+      background: var(--header-blue);
+      color: #ffffff;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .header-box h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-box p {
+      margin: 5px 0 0 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .form-body {
+      padding: 18px 16px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .input-group {
+      margin-bottom: 8px;
+    }
+
+    .input-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 6px;
+    }
+
+    .custom-input, .custom-select {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark-text);
+      background-color: #ffffff;
+      border: 1.5px solid var(--border-blue);
+      border-radius: 8px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .custom-select {
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .custom-input:focus, .custom-select:focus {
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+    }
+
+    .upload-area {
+      border: 2px dashed var(--border-blue);
+      background: var(--light-bg);
+      border-radius: 10px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .upload-area.dragover {
+      background: #d0e7ff;
+      border-color: var(--primary-blue);
+    }
+
+    .upload-area p {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .upload-area span {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .upload-area input {
+      display: none;
+    }
+
+    .section-card {
+      grid-column: 1 / -1;
+      background: var(--light-bg);
+      border: 1.5px solid var(--border-blue);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-blue);
+      padding-bottom: 6px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn-submit {
+      flex: 2;
+      padding: 14px;
+      background: var(--primary-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      transition: background 0.2s ease;
+    }
+
+    .btn-submit:disabled {
+      background: #b0bec5;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-reset {
+      flex: 1;
+      padding: 14px;
+      background: #e53935;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      background: var(--light-bg);
+      border: 1.5px solid var(--border-blue);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .result-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 8px;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .preview-item {
+      position: relative;
+      border: 1px solid var(--border-blue);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .preview-item img {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+    }
+
+    .card-tools {
+      display: flex;
+      justify-content: space-between;
+      background: var(--primary-blue);
+      padding: 2px 4px;
+    }
+
+    .card-tools button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* Mobile Responsive Rules */
+    @media (max-width: 580px) {
+      body {
+        padding: 8px;
+      }
+
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-box h2 {
+        font-size: 20px;
+      }
+
+      .btn-group {
+        flex-direction: column-reverse;
+      }
+
+      .btn-submit, .btn-reset {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="calculator-card">
+  <div class="header-box">
+    <h2>Image to PDF Converter</h2>
+    <p>Convert, customize, and save your images in PDF format</p>
+  </div>
+
+  <div class="form-body">
+    
+    <div class="input-group full-width">
+      <label>Select Images</label>
+      <div class="upload-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+        <p>Click or Drag & Drop Images Here</p>
+        <span>Supports JPG, PNG, WEBP</span>
+        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
+      </div>
+    </div>
+
+    <div class="options-grid">
+      
+      <div class="input-group">
+        <label>Output File Name</label>
+        <input type="text" id="fileName" class="custom-input" placeholder="e.g. My_Document">
+      </div>
+
+      <div class="input-group">
+        <label>Page Format</label>
+        <select id="pageSize" class="custom-select">
+          <option value="a4">A4 Standard</option>
+          <option value="letter">US Letter</option>
+          <option value="a3">A3 Large Format</option>
+          <option value="fit">Fit to Image Size</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Page Orientation</label>
+        <select id="pOrient" class="custom-select">
+          <option value="p">Portrait (Vertical)</option>
+          <option value="l">Landscape (Horizontal)</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Page Margins</label>
+        <select id="pMargin" class="custom-select">
+          <option value="0">No Margin</option>
+          <option value="12">Standard Margin</option>
+          <option value="25">Wide Margin</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Color Mode</label>
+        <select id="imgFilter" class="custom-select">
+          <option value="none">Original Colors</option>
+          <option value="grayscale">Grayscale (B&W)</option>
+        </select>
+      </div>
+
+      <div class="input-group full-width">
+        <label>Page Numbering</label>
+        <select id="addNumbers" class="custom-select">
+          <option value="yes">Add Page Numbers</option>
+          <option value="no">No Page Numbers</option>
+        </select>
+      </div>
+
+      <!-- Watermark Card -->
+      <div class="section-card">
+        <div class="section-title">Watermark Settings</div>
+        <div class="options-grid">
+          
+          <div class="input-group">
+            <label>Watermark Text</label>
+            <input type="text" id="wmarkText" class="custom-input" placeholder="e.g. CONFIDENTIAL">
+          </div>
+
+          <div class="input-group">
+            <label>Position</label>
+            <select id="wmPosition" class="custom-select">
+              <option value="center">Center</option>
+              <option value="top-left">Top Left</option>
+              <option value="top-right">Top Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="bottom-right">Bottom Right</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Font Size</label>
+            <input type="number" id="wmSize" class="custom-input" value="30" min="10" max="100">
+          </div>
+
+          <div class="input-group">
+            <label>Rotation Angle</label>
+            <select id="wmAngle" class="custom-select">
+              <option value="45">45° Diagonal</option>
+              <option value="0">0° Horizontal</option>
+              <option value="-45">-45° Reverse Diagonal</option>
+              <option value="90">90° Vertical</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Opacity</label>
+            <select id="wmOpacity" class="custom-select">
+              <option value="0.2">Light (20%)</option>
+              <option value="0.4">Medium (40%)</option>
+              <option value="0.7">Dark (70%)</option>
+              <option value="1.0">Solid (100%)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Text Color</label>
+            <input type="color" id="wmColor" class="custom-input" value="#888888" style="height: 44px; padding: 2px;">
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="result-box">
+      <div class="result-title" id="statusText">No images selected yet</div>
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-reset" onclick="resetAll()">Reset All</button>
+      <button class="btn-submit" id="convertBtn" onclick="generatePDF()" disabled>Convert & Download PDF</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let imageFiles = [];
+
+  const dropArea = document.getElementById('dropArea');
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+  });
+
+  dropArea.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+  });
+
+  function handleFiles(files) {
+    const validFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imageFiles.push({ id: Math.random(), src: e.target.result });
+        renderPreview();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderPreview() {
+    const grid = document.getElementById('previewGrid');
+    const status = document.getElementById('statusText');
+    const btn = document.getElementById('convertBtn');
+    
+    grid.innerHTML = '';
+
+    if (imageFiles.length === 0) {
+      status.innerText = "No images selected yet";
+      btn.disabled = true;
+      return;
+    }
+
+    status.innerText = `Selected Images (${imageFiles.length}):`;
+    btn.disabled = false;
+
+    imageFiles.forEach((imgObj, index) => {
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+      item.innerHTML = `
+        <img src="${imgObj.src}">
+        <div class="card-tools">
+          <button onclick="shiftImg(${index}, -1)" ${index === 0 ? 'disabled' : ''}>◄</button>
+          <button onclick="removeImage(${index})">✖</button>
+          <button onclick="shiftImg(${index}, 1)" ${index === imageFiles.length - 1 ? 'disabled' : ''}>►</button>
+        </div>
+      `;
+      grid.appendChild(item);
+    });
+  }
+
+  function removeImage(index) {
+    imageFiles.splice(index, 1);
+    renderPreview();
+  }
+
+  function shiftImg(i, dir) {
+    const target = i + dir;
+    if (target >= 0 && target < imageFiles.length) {
+      const temp = imageFiles[i];
+      imageFiles[i] = imageFiles[target];
+      imageFiles[target] = temp;
+      renderPreview();
+    }
+  }
+
+  function resetAll() {
+    imageFiles = [];
+    document.getElementById('fileInput').value = '';
+    document.getElementById('wmarkText').value = '';
+    renderPreview();
+  }
+
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 128, g: 128, b: 128 };
+  }
+
+  async function generatePDF() {
+    if (imageFiles.length === 0) return;
+
+    const convertBtn = document.getElementById('convertBtn');
+    convertBtn.innerText = "Generating PDF...";
+    convertBtn.disabled = true;
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const format = document.getElementById('pageSize').value;
+      const orient = document.getElementById('pOrient').value;
+      const margin = parseInt(document.getElementById('pMargin').value);
+      const filter = document.getElementById('imgFilter').value;
+      const fileName = document.getElementById('fileName').value.trim() || 'Document';
+      const pageNum = document.getElementById('addNumbers').value;
+
+      const wText = document.getElementById('wmarkText').value.trim();
+      const wPos = document.getElementById('wmPosition').value;
+      const wSize = parseInt(document.getElementById('wmSize').value) || 30;
+      const wAngle = parseInt(document.getElementById('wmAngle').value) || 0;
+      const wOpacity = parseFloat(document.getElementById('wmOpacity').value) || 0.4;
+      const wColorHex = document.getElementById('wmColor').value;
+      const rgb = hexToRgb(wColorHex);
+
+      let doc;
+
+      for (let i = 0; i < imageFiles.length; i++) {
+        let src = imageFiles[i].src;
+        if (filter === 'grayscale') src = await applyGrayscale(src);
+
+        const imgProps = await getImgSize(src);
+
+        if (i === 0) {
+          if (format === 'fit') {
+            doc = new jsPDF({ orientation: imgProps.w > imgProps.h ? 'l' : 'p', unit: 'pt', format: [imgProps.w, imgProps.h] });
+          } else {
+            doc = new jsPDF(orient, 'mm', format);
+          }
+        } else {
+          if (format === 'fit') {
+            doc.addPage([imgProps.w, imgProps.h], imgProps.w > imgProps.h ? 'l' : 'p');
+          } else {
+            doc.addPage(format, orient);
+          }
+        }
+
+        const pWidth = doc.internal.pageSize.getWidth();
+        const pHeight = doc.internal.pageSize.getHeight();
+        const printableW = pWidth - (margin * 2);
+        const printableH = pHeight - (margin * 2);
+
+        let renderW = printableW;
+        let renderH = (imgProps.h * printableW) / imgProps.w;
+
+        if (renderH > printableH) {
+          renderH = printableH;
+          renderW = (imgProps.w * printableH) / imgProps.h;
+        }
+
+        const posX = margin + (printableW - renderW) / 2;
+        const posY = margin + (printableH - renderH) / 2;
+
+        doc.addImage(src, 'JPEG', posX, posY, renderW, renderH);
+
+        if (wText !== '') {
+          doc.saveGraphicsState();
+          doc.setGState(new doc.GState({ opacity: wOpacity }));
+          doc.setTextColor(rgb.r, rgb.g, rgb.b);
+          doc.setFontSize(wSize);
+
+          let wx = pWidth / 2;
+          let wy = pHeight / 2;
+          let align = 'center';
+
+          if (wPos === 'top-left') { wx = 20; wy = 30; align = 'left'; }
+          else if (wPos === 'top-right') { wx = pWidth - 20; wy = 30; align = 'right'; }
+          else if (wPos === 'bottom-left') { wx = 20; wy = pHeight - 30; align = 'left'; }
+          else if (wPos === 'bottom-right') { wx = pWidth - 20; wy = pHeight - 30; align = 'right'; }
+
+          doc.text(wText, wx, wy, { align: align, angle: wAngle });
+          doc.restoreGraphicsState();
+        }
+
+        if (pageNum === 'yes') {
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(10);
+          doc.text(`Page ${i + 1} of ${imageFiles.length}`, pWidth - 15, pHeight - 10, { align: 'right' });
+        }
+      }
+
+      doc.save(`${fileName}.pdf`);
+    } catch (err) {
+      alert("Error generating PDF: " + err.message);
+    } finally {
+      convertBtn.innerText = "Convert & Download PDF";
+      convertBtn.disabled = false;
+    }
+  }
+
+  function getImgSize(src) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => res({ w: img.width, h: img.height });
+      img.src = src;
+    });
+  }
+
+  function applyGrayscale(src) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const cvs = document.createElement('canvas');
+        const ctx = cvs.getContext('2d');
+        cvs.width = img.width; cvs.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+        for (let i = 0; i < imgData.data.length; i += 4) {
+          const avg = (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) / 3;
+          imgData.data[i] = avg; imgData.data[i + 1] = avg; imgData.data[i + 2] = avg;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        res(cvs.toDataURL('image/jpeg'));
+      };
+      img.src = src;
+    });
+  }
+</script>
+
+</body>
+</html>
