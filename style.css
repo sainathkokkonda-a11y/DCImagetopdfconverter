@@ -245,7 +245,7 @@ body {
 /* Mobile Responsive Rules */
 @media (max-width: 580px) {
   body {
-    padding: 8px;
+    padding: 0px;
   }
 
   .options-grid {
